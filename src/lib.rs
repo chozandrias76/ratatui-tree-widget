@@ -3,10 +3,10 @@
 use std::collections::HashSet;
 
 use ratatui::buffer::Buffer;
-use ratatui::layout::{Corner, Rect};
+use ratatui::layout::Rect;
 use ratatui::style::Style;
 use ratatui::text::Text;
-use ratatui::widgets::{Block, StatefulWidget, Widget};
+use ratatui::widgets::{Block, StatefulWidget, Widget, ListDirection};
 use unicode_width::UnicodeWidthStr;
 
 mod flatten;
@@ -273,7 +273,7 @@ pub struct Tree<'a> {
     items: Vec<TreeItem<'a>>,
 
     block: Option<Block<'a>>,
-    start_corner: Corner,
+    direction: ListDirection,
     /// Style used as a base style for the widget
     style: Style,
 
@@ -299,7 +299,7 @@ impl<'a> Tree<'a> {
         Self {
             items: items.into(),
             block: None,
-            start_corner: Corner::TopLeft,
+            direction: ListDirection::TopToBottom,
             style: Style::default(),
             highlight_style: Style::default(),
             highlight_symbol: "",
@@ -317,8 +317,8 @@ impl<'a> Tree<'a> {
     }
 
     #[must_use]
-    pub const fn start_corner(mut self, corner: Corner) -> Self {
-        self.start_corner = corner;
+    pub const fn direction(mut self, direction: ListDirection) -> Self {
+        self.direction = direction;
         self
     }
 
@@ -421,13 +421,12 @@ impl<'a> StatefulWidget for Tree<'a> {
         let has_selection = !state.selected.is_empty();
         #[allow(clippy::cast_possible_truncation)]
         for item in visible.iter().skip(state.offset).take(end - start) {
-            #[allow(clippy::single_match_else)] // Keep same as List impl
-            let (x, y) = match self.start_corner {
-                Corner::BottomLeft => {
+            let (x, y) = match self.direction {
+                ListDirection::BottomToTop => {
                     current_height += item.item.height() as u16;
                     (area.left(), area.bottom() - current_height)
                 }
-                _ => {
+                ListDirection::TopToBottom => {
                     let pos = (area.left(), area.top() + current_height);
                     current_height += item.item.height() as u16;
                     pos

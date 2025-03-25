@@ -12,7 +12,7 @@ use ratatui::{
     widgets::{Block, Borders},
     Terminal,
 };
-use std::{error::Error, io};
+use std::{error::Error, io, time::{Duration, Instant}};
 
 use ratatui_tree_widget::{Tree, TreeItem};
 
@@ -68,9 +68,11 @@ fn main() -> Result<(), Box<dyn Error>> {
 }
 
 fn run_app<B: Backend>(terminal: &mut Terminal<B>, mut app: App) -> io::Result<()> {
+    let mut last_key_time = Instant::now(); // Track the last key press time
+
     loop {
         terminal.draw(|f| {
-            let area = f.size();
+            let area = f.area();
 
             let items = Tree::new(app.tree.items.clone())
                 .block(
@@ -81,24 +83,30 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, mut app: App) -> io::Result<(
                 .highlight_style(
                     Style::default()
                         .fg(Color::Black)
-                        .bg(Color::LightGreen)
+                        .bg(Color::LightRed)
                         .add_modifier(Modifier::BOLD),
-                )
-                .highlight_symbol(">> ");
+                );
             f.render_stateful_widget(items, area, &mut app.tree.state);
         })?;
 
-        if let Event::Key(key) = event::read()? {
-            match key.code {
-                KeyCode::Char('q') => return Ok(()),
-                KeyCode::Char('\n' | ' ') => app.tree.toggle(),
-                KeyCode::Left => app.tree.left(),
-                KeyCode::Right => app.tree.right(),
-                KeyCode::Down => app.tree.down(),
-                KeyCode::Up => app.tree.up(),
-                KeyCode::Home => app.tree.first(),
-                KeyCode::End => app.tree.last(),
-                _ => {}
+        if event::poll(Duration::from_millis(149)).ok().unwrap() {
+            if let Event::Key(key) = event::read().ok().unwrap() {
+                // Debounce threshold
+                if last_key_time.elapsed() >= Duration::from_millis(150) {
+                    // Update the last key press time
+                    last_key_time = Instant::now(); 
+                    match key.code {
+                        KeyCode::Char('q') => return Ok(()),
+                        KeyCode::Char('\n' | ' ') => app.tree.toggle(),
+                        KeyCode::Left => app.tree.left(),
+                        KeyCode::Right => app.tree.right(),
+                        KeyCode::Down => app.tree.down(),
+                        KeyCode::Up => app.tree.up(),
+                        KeyCode::Home => app.tree.first(),
+                        KeyCode::End => app.tree.last(),
+                        _ => {}
+                    }
+                }
             }
         }
     }

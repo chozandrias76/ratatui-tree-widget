@@ -1,5 +1,6 @@
 use crate::identifier::{TreeIdentifier, TreeIdentifierVec};
 use crate::TreeItem;
+use ratatui::text;
 
 pub struct Flattened<'a> {
     pub identifier: Vec<usize>,
@@ -46,11 +47,12 @@ fn internal<'a>(
 }
 
 #[cfg(test)]
-fn get_naive_string_from_text(text: &tui::text::Text<'_>) -> String {
+fn get_naive_string_from_text(text: &text::Text<'_>) -> String {
+
     text.lines
         .first()
         .unwrap()
-        .0
+        .spans
         .first()
         .unwrap()
         .content

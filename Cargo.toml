@@ -12,7 +12,7 @@ include = ["src/**/*", "README.md"]
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-ratatui = { version = "0.22.0", features = ["all-widgets"] }
+ratatui = { version = "0.28.1", features = ["all-widgets"] }
 unicode-width = "0.1"
 
 [dependencies.crossterm]
